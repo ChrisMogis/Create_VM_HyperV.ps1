@@ -8,7 +8,7 @@
 #Script Parameters
 Param(
 [Parameter(Mandatory=$true)]
-[ValidateSet("Template1", "Template2")]
+[ValidateSet("VM1", "VM2")]
 [String[]]
 $Template
 )
@@ -16,60 +16,71 @@ $Template
 #Variables
 $VMNumber = Get-Random
 $VMName = "CCMT" + $VMNumber
-$vSwitchName = "External-vSwtich"
+$vSwitchName = "External"
 $StoreVM = "C:\VMs\vDisks\$($VMName).vhdx"
 $StoreData = "C:\VMs\vDatas\"
 $ISO = "C:\Users\cmogi\Downloads\22000.318.211104-1236.co_release_svc_refresh_CLIENTENTERPRISEEVAL_OEMRET_x64FRE_en-us.iso"
 
 #Template 1
-If ($Template -eq "Template1")
+If ($Template -eq "VM1")
 {
     #Detect active network connection and create Virtual Network Switch
-    $vSwitch = (Get-VMSwitch -Name $($vSwitchName)).Name
+    $vSwitch = (Get-NetAdapter | Where-Object {$_.status -eq "up"}).Name 
 
     #If vSwitch not exit, create vSwitch
-    If ($vSwitch -ne $vSwitchName)
-    {
+    If ($vSwitchName -eq $vSwitch)
         {
-        New-VMSwitch -Name $vSwitchName -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
+        New-VMSwitch -Name "$($vSwitchName)" -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
+        Write-Host "Your vSwitch $($vSwitchName) is created" -foregroundcolor "green"
         }
     else 
         {
-        Write-Host "$vSwitchName already exist."
+        Write-Host "vSwitch already exist." -foregroundcolor "yellow"
         }
-    }
+
     #Create VM
     New-VM -Name $VMName -MemoryStartupBytes 2GB -BootDevice VHD -NewVHDPath $StoreVM -Path $StoreData -NewVHDSizeBytes 60GB -Generation 2 -Switch $vSwitchName
+    Write-Host "Your virtual Machine $($VMName) is create" -foregroundcolor "green"
+    Set-VMProcessor $($VMName) -Count 2
+    Write-Host "Configure 2 vCPU on $($VMName)" -foregroundcolor "green"
 
     #Add VM drive
     Add-VMDvdDrive -Path $ISO -VMName $VMName
+    Write-Host "Vdisk adding to $($VMName)" -foregroundcolor "green"
 
-    # Configuring the boot order to ISO, VHD, and Network
+    #Configuring the boot order to ISO, VHD, and Network
     Set-VMFirmware -VMName $VMName -BootOrder $(Get-VMDvdDrive -VMName $VMName), $(Get-VMHardDiskDrive -VMName $VMName), $(Get-VMNetworkAdapter -VMName $VMName)
+    Write-Host "Boot order is configure to $($VMName)" -foregroundcolor "green"
 }
 
-#Template 2
-If ($Template -eq "Template2")
+#Template 1
+If ($Template -eq "VM2")
 {
     #Detect active network connection and create Virtual Network Switch
-    $vSwitch = (Get-VMSwitch -Name $($vSwitchName)).Name
+    $vSwitch = (Get-NetAdapter | Where-Object {$_.status -eq "up"}).Name 
 
     #If vSwitch not exit, create vSwitch
-    If ($vSwitch -ne $vSwitchName)
-    {
+    If ($vSwitchName -eq $vSwitch)
+        {
         New-VMSwitch -Name "$($vSwitchName)" -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
-    }
+        Write-Host "Your vSwitch $($vSwitchName) is created" -foregroundcolor "green"
+        }
     else 
-    {
-        Write-Host "$($vSwitchName) already exist."
-    }
-    
+        {
+        Write-Host "vSwitch already exist." -foregroundcolor "yellow"
+        }
+
     #Create VM
-    New-VM -Name "$($VMName)" -MemoryStartupBytes 4GB -BootDevice VHD -NewVHDPath "$($StoreVM)" -Path "$($StoreData)" -NewVHDSizeBytes 80GB -Generation 2 -Switch "$($vSwitchName)"
+    New-VM -Name $VMName -MemoryStartupBytes 4GB -BootDevice VHD -NewVHDPath $StoreVM -Path $StoreData -NewVHDSizeBytes 80GB -Generation 2 -Switch $vSwitchName
+    Write-Host "Your virtual Machine $($VMName) is create" -foregroundcolor "green"
+    Set-VMProcessor $($VMName) -Count 2
+    Write-Host "Configure 2 vCPU on $($VMName)" -foregroundcolor "green"
 
     #Add VM drive
-    Add-VMDvdDrive -Path $ISO -VMName "$($VMName)"
+    Add-VMDvdDrive -Path $ISO -VMName $VMName
+    Write-Host "Vdisk adding to $($VMName)" -foregroundcolor "green"
 
-    # Configuring the boot order to ISO, VHD, and Network
+    #Configuring the boot order to ISO, VHD, and Network
     Set-VMFirmware -VMName $VMName -BootOrder $(Get-VMDvdDrive -VMName $VMName), $(Get-VMHardDiskDrive -VMName $VMName), $(Get-VMNetworkAdapter -VMName $VMName)
+    Write-Host "Boot order is configure to $($VMName)" -foregroundcolor "green"
 }
