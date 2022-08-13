@@ -24,25 +24,27 @@ $ISO = "C:\Users\cmogi\Downloads\22000.318.211104-1236.co_release_svc_refresh_CL
 #Template 1
 If ($Template -eq "VM1")
 {
-    #Detect active network connection and create Virtual Network Switch
-    $vSwitch = (Get-NetAdapter | Where-Object {$_.status -eq "up"}).Name 
+    #Detect If vSwitch is already create
+    $vSwitch = (Get-VMSwitch | Where-Object {$_.Name -eq "$vSwitchName"}).Name
 
     #If vSwitch not exit, create vSwitch
-    If ($vSwitchName -eq $vSwitch)
-        {
-        New-VMSwitch -Name "$($vSwitchName)" -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
-        Write-Host "Your vSwitch $($vSwitchName) is created" -foregroundcolor "green"
-        }
-    else 
-        {
-        Write-Host "vSwitch already exist." -foregroundcolor "yellow"
-        }
+         If ($vSwitchName -ne $vSwitch)
+            {
+            New-VMSwitch -Name "$($vSwitchName)" -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
+            Write-Host "Your vSwitch $($vSwitchName) is created" -foregroundcolor "green"
+            }
+        else 
+            {
+            Write-Host "vSwitch already exist." -foregroundcolor "yellow"
+            }
 
     #Create VM
     New-VM -Name $VMName -MemoryStartupBytes 2GB -BootDevice VHD -NewVHDPath $StoreVM -Path $StoreData -NewVHDSizeBytes 60GB -Generation 2 -Switch $vSwitchName
     Write-Host "Your virtual Machine $($VMName) is create" -foregroundcolor "green"
-    Set-VMProcessor $($VMName) -Count 2
+    Set-VMProcessor $VMName -Count 2
     Write-Host "Configure 2 vCPU on $($VMName)" -foregroundcolor "green"
+    #Enable-VMTPM -VMName $($VMName)
+    #Write-Host "enable TPM module on $($VMName)" -foregroundcolor "green"
 
     #Add VM drive
     Add-VMDvdDrive -Path $ISO -VMName $VMName
@@ -54,27 +56,29 @@ If ($Template -eq "VM1")
 }
 
 #Template 1
-If ($Template -eq "VM2")
+If ($Template -eq "VM1")
 {
-    #Detect active network connection and create Virtual Network Switch
-    $vSwitch = (Get-NetAdapter | Where-Object {$_.status -eq "up"}).Name 
+    #Detect If vSwitch is already create
+    $vSwitch = (Get-VMSwitch | Where-Object {$_.Name -eq "$vSwitchName"}).Name
 
     #If vSwitch not exit, create vSwitch
-    If ($vSwitchName -eq $vSwitch)
-        {
-        New-VMSwitch -Name "$($vSwitchName)" -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
-        Write-Host "Your vSwitch $($vSwitchName) is created" -foregroundcolor "green"
-        }
-    else 
-        {
-        Write-Host "vSwitch already exist." -foregroundcolor "yellow"
-        }
+         If ($vSwitchName -ne $vSwitch)
+            {
+            New-VMSwitch -Name "$($vSwitchName)" -AllowManagementOS $true -NetAdapterName (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and !$_.Virtual}).Name
+            Write-Host "Your vSwitch $($vSwitchName) is created" -foregroundcolor "green"
+            }
+        else 
+            {
+            Write-Host "vSwitch already exist." -foregroundcolor "yellow"
+            }
 
     #Create VM
     New-VM -Name $VMName -MemoryStartupBytes 4GB -BootDevice VHD -NewVHDPath $StoreVM -Path $StoreData -NewVHDSizeBytes 80GB -Generation 2 -Switch $vSwitchName
     Write-Host "Your virtual Machine $($VMName) is create" -foregroundcolor "green"
-    Set-VMProcessor $($VMName) -Count 2
+    Set-VMProcessor $VMName -Count 2
     Write-Host "Configure 2 vCPU on $($VMName)" -foregroundcolor "green"
+    #Enable-VMTPM -VMName $($VMName)
+    #Write-Host "enable TPM module on $($VMName)" -foregroundcolor "green"
 
     #Add VM drive
     Add-VMDvdDrive -Path $ISO -VMName $VMName
