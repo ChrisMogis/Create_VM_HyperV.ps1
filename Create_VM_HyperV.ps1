@@ -56,7 +56,7 @@ If ($Template -eq "VM1")
 }
 
 #Template 1
-If ($Template -eq "VM1")
+If ($Template -eq "VM2")
 {
     #Detect If vSwitch is already create
     $vSwitch = (Get-VMSwitch | Where-Object {$_.Name -eq "$vSwitchName"}).Name
@@ -75,8 +75,8 @@ If ($Template -eq "VM1")
     #Create VM
     New-VM -Name $VMName -MemoryStartupBytes 4GB -BootDevice VHD -NewVHDPath $StoreVM -Path $StoreData -NewVHDSizeBytes 80GB -Generation 2 -Switch $vSwitchName
     Write-Host "Your virtual Machine $($VMName) is create" -foregroundcolor "green"
-    Set-VMProcessor $VMName -Count 2
-    Write-Host "Configure 2 vCPU on $($VMName)" -foregroundcolor "green"
+    Set-VMProcessor $VMName -Count 4
+    Write-Host "Configure 4 vCPU on $($VMName)" -foregroundcolor "green"
     #Enable-VMTPM -VMName $($VMName)
     #Write-Host "enable TPM module on $($VMName)" -foregroundcolor "green"
 
